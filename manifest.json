@@ -2,12 +2,12 @@
   "name": "Study Assist",
   "short_name": "Study Assist",
   "description": "Gamify your study sessions with XP, levels, and boss battles!",
-  "start_url": "/",
+  "start_url": ".",
   "display": "standalone",
   "background_color": "#0f172a",
   "theme_color": "#0f172a",
   "orientation": "portrait",
-  "scope": "/",
+  "scope": ".",
   "icons": [
     {
       "src": "icon.png",
