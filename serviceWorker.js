@@ -1,17 +1,18 @@
 const CACHE_NAME = "study-game-v1"
 
 const FILES_TO_CACHE = [
-  "index.html",
-  "style.css",
-  "script.js",
-  "manifest.json",
-  "icon.png",
-  "sounds/interface.mp3",
-  "sounds/lvlup.mp3",
-  "sounds/taskComplete.mp3",
-  "sounds/progressBar.mp3",
-  "sounds/error.mp3",
-  "sounds/acceptBoss.mp3"
+  "./",
+  "./index.html",
+  "./style.css",
+  "./script.js",
+  "./manifest.json",
+  "./icon.png",
+  "./sounds/interface.mp3",
+  "./sounds/lvlup.mp3",
+  "./sounds/taskComplete.mp3",
+  "./sounds/progressBar.mp3",
+  "./sounds/error.mp3",
+  "./sounds/acceptBoss.mp3"
 ]
 
 self.addEventListener("install", event => {
