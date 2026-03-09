@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+    
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Life Study Game</title>
+
+<link rel="stylesheet" href="style.css">
+<link rel="manifest" href="manifest.json">
+
+</head>
+
+<body>
+
+<h1>⚡ Life Study Game</h1>
+
+<div class="stats">
+
+<p>Progress Points: <span id="pp">0</span></p>
+<p>XP: <span id="xp">0</span></p>
+
+<p class="streak">🔥 Streak: <span id="streak">0</span></p>
+
+<div class="bar">
+<div id="progress"></div>
+
+</div>
+
+<h3>Level: <span id="level">1</span></h3>
+
+<div class="xpBar">
+<div id="xpProgress"></div>
+</div>
+
+<p id="xpText"></p>
+
+</div>
+
+<div class="taskInput">
+
+<select id="subject">
+<option value="">Select Subject</option>
+<option>Physics</option>
+<option>Chemistry</option>
+<option>Mathematics</option>
+<option>Biology</option>
+<option>ICT</option>
+<option>Bangla</option>
+<option>English</option>
+</select>
+
+<input id="taskText" placeholder="Topic / Description">
+
+<select id="difficulty">
+<option value="">Difficulty</option>
+<option value="easy">Easy</option>
+<option value="medium">Medium</option>
+<option value="hard">Hard</option>
+</select>
+
+<button onclick="addTask()">Add Task</button>
+
+</div>
+
+<div id="bossBox"></div>
+
+<div id="taskList"></div>
+
+<h3 id="reward"></h3>
+
+<h2>Study History</h2>
+
+<div id="historyList"></div>
+
+<script src="script.js"></script>
+
+</body>
+</html>
