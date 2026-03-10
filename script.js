@@ -5,13 +5,14 @@ let PP = 0
 let XP = 0
 let tasks = []
 let history = []
+let rewards = []
 let currentLevel = 1
 let streak = 0
 let lastStudyDate = null
 let bossEvent = null
 let audioUnlocked = false
 
-let achievements = {  // <-- THIS IS THE PROBLEM!
+let achievements = { 
     firstTask: false,
     streak3: false,
     streak7: false,
@@ -34,34 +35,13 @@ Object.values(sounds).forEach(sound=>{
 // ============================================
 // PWA DETECTION & SERVICE WORKER
 // ============================================
-// Detect if running as installed PWA vs browser
-if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) {
-    console.log(" App running in standalone mode (installed PWA)")
-    // In PWA mode, we rely on cache
-} else {
-    console.log(" App running in browser mode")
-}
-
-// Register Service Worker
 if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => {
-    // Clear any old service workers first
-    navigator.serviceWorker.getRegistrations().then(registrations => {
-      for(let registration of registrations) {
-        registration.unregister()
-        console.log("Old service worker unregistered")
-      }
-    }).then(() => {
-      // Register new service worker
-      navigator.serviceWorker.register("serviceWorker.js")
-        .then(registration => {
-          console.log("✅ ServiceWorker registered successfully: ", registration)
-        })
-        .catch(error => {
-          console.log("❌ ServiceWorker registration failed: ", error)
-        })
+    window.addEventListener("load", async () => {
+        try {
+            const registration = await navigator.serviceWorker.register("serviceWorker.js")
+            registration.update()
+        } catch {}
     })
-  })
 }
 
 // ============================================
@@ -79,6 +59,7 @@ document.addEventListener('DOMContentLoaded', () => {
     renderHistory()
     renderAchievements()
     checkEmptyElements()
+    renderRewards()
 
    let activeBossTask = tasks.find(task => task.difficulty === "boss")
     if (activeBossTask) {
@@ -260,7 +241,30 @@ function updateStreak() {
 // TASK MANAGEMENT
 // ============================================
 function addTask() {
-    // Check if ANY boss battle exists (active OR paused)
+    if (tasks.length > 0) {
+
+    playSound("error")
+
+    let bossBox = document.getElementById("bossBox")
+    bossBox.style.display = "flex"
+
+    bossBox.innerHTML = `
+        <div>⚠ Study Session In Progress</div>
+        <div style="font-size:14px; margin-top:6px;">
+            Finish your current task before starting a new one.
+        </div>
+    `
+
+    setTimeout(() => {
+        if (bossEvent && !bossEvent.accepted) {
+            showBossUI()
+        }
+    }, 3000)
+
+    return
+}
+
+
     let hasAnyBoss = tasks.some(task => task.difficulty === "boss")
     
     if (hasAnyBoss) {
@@ -366,7 +370,7 @@ function renderTasks() {
 <b>${task.subject}</b> — ${task.text} (${task.difficulty})
 <p class="timer">${isCompleted ? "✅ Task Ready" : formatTime(remaining)}</p>
 <button class="pauseBtn" ${isCompleted ? 'style="display:none;"' : ''}>${task.paused ? "▶ Resume" : "⏸ Pause"}</button>
-<button class="doneBtn" ${isCompleted ? '' : 'disabled'}>Done</button>
+<button class="doneBtn" ${!isCompleted ? 'disabled' : ''}>Done</button>
 `
         container.appendChild(div)
         
@@ -517,20 +521,55 @@ function updateUI() {
 }
 
 function checkReward() {
+
     let reward = ""
 
     if (PP >= 100)
-        reward = "🎉 Reward: 45 min Coding"
+        reward = "🎉 45 min Coding"
     else if (PP >= 60)
-        reward = "📖 Reward: Novel Time"
+        reward = "📖 Novel Time 30 Min"
     else if (PP >= 30)
-        reward = "💻 Reward: 15 min Coding"
+        reward = "💻 15 min Coding"
 
-    document.getElementById("reward").innerText = reward
+    if (reward) {
+
+        rewards.push({
+            text: reward,
+            time: new Date().toISOString()
+        })
+
+        saveData()
+        renderRewards()
+    }
     checkEmptyElements()
 }
 
+function renderRewards(){
 
+    let container = document.getElementById("rewardList")
+    if(!container) return
+
+    container.innerHTML = ""
+
+    rewards.slice().reverse().forEach(r => {
+
+        let div = document.createElement("div")
+        div.className = "rewardItem"
+
+        let time = new Date(r.time)
+            .toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})
+
+        div.innerHTML = `
+            <b>${r.text}</b>
+            <br>
+            <small>${time}</small>
+        `
+
+        container.appendChild(div)
+
+    })
+    checkEmptyElements()
+}
 
 // ============================================
 // LEVEL & XP SYSTEM
@@ -563,8 +602,8 @@ function updateLevel() {
     checkAchievements()
 }
 
-// Add this function to check and hide empty elements
 function checkEmptyElements() {
+
     // Check reward message
     const rewardEl = document.getElementById('reward');
     if (rewardEl && rewardEl.innerHTML.trim() === '') {
@@ -572,11 +611,23 @@ function checkEmptyElements() {
     } else if (rewardEl) {
         rewardEl.style.display = 'block';
     }
-    
+
     // Check boss box
     const bossBox = document.getElementById('bossBox');
     if (bossBox && bossBox.innerHTML.trim() === '') {
         bossBox.style.display = 'none';
+    }
+
+    // NEW: Check reward list
+    const rewardSection = document.querySelector(".reward-section");
+    const rewardList = document.getElementById("rewardList");
+
+    if (rewardSection && rewardList) {
+        if (rewardList.children.length === 0) {
+            rewardSection.style.display = "none";
+        } else {
+            rewardSection.style.display = "block";
+        }
     }
 }
 
@@ -591,6 +642,7 @@ function saveData() {
     localStorage.setItem("streak", streak)
     localStorage.setItem("lastStudyDate", lastStudyDate)
     localStorage.setItem("achievements", JSON.stringify(achievements))
+    localStorage.setItem("rewards", JSON.stringify(rewards))
 }
 
 function loadData() {
@@ -603,6 +655,9 @@ function loadData() {
     let savedHistory = localStorage.getItem("history")
     let savedAchievements = localStorage.getItem("achievements")
     let savedBoss = localStorage.getItem("bossEvent")
+    let savedRewards = localStorage.getItem("rewards")
+    
+    if (savedRewards) rewards = JSON.parse(savedRewards)
 
     if (savedTasks) {
         tasks = JSON.parse(savedTasks)
@@ -656,12 +711,20 @@ function checkDailyReset() {
     lastReset = new Date(lastReset)
 
     if (now >= today5am && lastReset < today5am) {
-        PP = 0
-        tasks = []
-        localStorage.removeItem("tasks")
-        localStorage.setItem("lastReset", now)
-        saveData()
-    }
+
+    PP = 0
+    tasks = []
+    rewards = []   
+
+    localStorage.removeItem("tasks")
+
+    localStorage.setItem("lastReset", now)
+
+    saveData()
+
+    renderRewards()
+}
+
     checkEmptyElements()
 }
 
@@ -679,22 +742,24 @@ function studyReminder() {
 // BOSS EVENT SYSTEM
 // ============================================
 function checkBossSpawn() {
+
     let today = new Date().toDateString()
     let lastBossDay = localStorage.getItem("lastBossDay")
 
     if (lastBossDay === today) return
 
-    // Check if there's ANY boss task (active OR paused)
+    // Check if a boss already exists
     let hasAnyBoss = tasks.some(task => task.difficulty === "boss")
-    
-    if (hasAnyBoss) {
-        // Don't spawn new boss if one already exists in any state
-        return
-    }
+    if (hasAnyBoss) return
+
+    // Record that today's roll has happened
+    localStorage.setItem("lastBossDay", today)
 
     let chance = Math.random()
-    if (chance < 0.35) { // 35% chance per day
+
+    if (chance < 0.35) { // 35% chance
         let now = Date.now()
+
         bossEvent = {
             spawnTime: now,
             expires: now + 3 * 60 * 60 * 1000,
@@ -702,7 +767,7 @@ function checkBossSpawn() {
         }
 
         localStorage.setItem("bossEvent", JSON.stringify(bossEvent))
-        localStorage.setItem("lastBossDay", today)
+
         showBossUI()
 
         sendNotification(
@@ -710,7 +775,6 @@ function checkBossSpawn() {
             "Accept within 3 hours for 200 XP"
         )
     }
-    
 }
 
 function acceptBoss() {
