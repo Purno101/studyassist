@@ -263,6 +263,24 @@ button, a, div {
     box-shadow: 0 0 20px rgba(56, 189, 248, 0.5);
 }
 
+.reward-section{
+    margin-top: 20px;
+    padding: 14px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 16px;
+}
+
+.rewardItem{
+    padding:10px;
+    margin-bottom:8px;
+    background:#0f172a;
+    border-left:3px solid #facc15;
+    border-radius:10px;
+}
+
+#rewardList{
+    margin-top: 20px;
+}
 .panels-container {
     flex: 1;
     position: relative;
